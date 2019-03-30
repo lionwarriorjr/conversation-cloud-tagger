@@ -40,7 +40,7 @@ spec:
                   - ml-service-predictor
         containers:
           - name: toxic-tagger
-            image: 359302.dkr.ecr.us-east-1.amazonaws.com/universe:0.0.1 # our Docker container
+            image: jhu-cloud/toxic-tagger # our Docker container
             imagePullPolicy: Always
             resources:
               requests:
@@ -51,7 +51,7 @@ spec:
             command:
               - "sh"
               - "-c"
-              - "(python3 ./run-cloud-tagger.py)"
+              - "(python3 ./app-cloud-tagger.py)"
             readinessProbe:
               httpGet:
                 path: /health-check
