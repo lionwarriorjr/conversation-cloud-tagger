@@ -51,7 +51,7 @@ spec:
             command:
               - "sh"
               - "-c"
-              - "(python3 ./app-cloud-tagger.py)"
+              - "(python3 ./app-toxic-tagger.py)"
             readinessProbe:
               httpGet:
                 path: /health-check
