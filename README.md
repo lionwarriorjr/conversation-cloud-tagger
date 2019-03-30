@@ -16,3 +16,5 @@ As of now, each of these four parts are distinct and are mostly exploratory. The
 
 Generating Reproducible results:
 To run our notebook, you should be able to unzip the data in the toxic-data zip file and run the cloud-conversation-tagger-unbalanced notebook, up until the Deep Learning section (which is not yet tested). One can also run python app-toxic-tagger.py from within the app directory and pass a command line argument for the string of text to test (i.e python app-toxic-tagger.py "test example to tag").
+
+Make sure to run the code in a virtual environment with Python 3.5.
