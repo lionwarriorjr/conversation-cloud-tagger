@@ -1,5 +1,8 @@
 # conversation-cloud-tagger
-Tags the extent to which conversation dialogue is constructive vs. nonconstructive/aggressive/toxic.
+
+Team Members: Srihari Mohan, Lalit Verada, Ben Pikus, Parth Singh
+
+This project exists as a cloud-based ML service that tags the extent to which conversation online is constructive vs. nonconstructive/aggressive/toxic. We leverage Machine Learning, Kubernetes, Spark, and Kafka as an exercise in building this system out from scratch in this novel and important area.
 
 Checkpoint 1:
 
