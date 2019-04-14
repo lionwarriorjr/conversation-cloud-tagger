@@ -15,13 +15,14 @@ from pyspark.sql import SQLContext, SparkSession, Row
 from pyspark.sql.types import *
 import pyspark.sql.functions as F
 from pyod.models.loci import LOCI
-import pyflux as pf
+#import pyflux as pf
 from google.cloud import bigquery
-from kafka import KafkaConsumer
+from kafka import KafkaConsumer, SimpleProducer, KafkaClient
+import tweepy
 
 spark = SparkSession.builder.appName('mltox').getOrCreate()
 
-MODEL_PATH = "app/spark-gradientboosting-toxic-tagger-cv"
+MODEL_PATH = "models/spark-gradientboosting-toxic-tagger-cv"
 FORECAST_WINDOW_PCT = 0.25
 FORECAST_MCMC_SIMULATIONS = 10000 # tunable
 STREAMED_FILENAME = "app/toxic-data/tweets-timestamped.csv"
@@ -93,11 +94,11 @@ def forecast(df):
     forecast_window = int(df.shape[0] * FORECAST_WINDOW_PCT)
     forecasted = pd.DataFrame(columns=['timestamp','prediction'])
     model = None
-    if forecast_window > 0:
-        ts = df.set_index('timestamp')
-        model = pf.GARCH(p=1, q=1, data=ts)
-        model.fit('M-H', nsims=FORECAST_MCMC_SIMULATIONS)
-        forecasted = model.predict(forecast_window).reset_index()
+    #if forecast_window > 0:
+        #ts = df.set_index('timestamp')
+        #model = pf.GARCH(p=1, q=1, data=ts)
+        #model.fit('M-H', nsims=FORECAST_MCMC_SIMULATIONS)
+        #forecasted = model.predict(forecast_window).reset_index()
     return forecasted, model
 
 def run():
