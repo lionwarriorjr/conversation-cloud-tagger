@@ -1,0 +1,3 @@
+#!/Users/sriharimohan/MachineLearning/CloudProject/build2/toxic/bin/python
+from numba.pycc import main
+main()

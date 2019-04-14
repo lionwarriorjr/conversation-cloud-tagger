@@ -15,9 +15,8 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.externals import joblib
 from imblearn.pipeline import Pipeline as imb_Pipeline
 import string
-import tensorflow as tf
 
-MODEL_PATH = '../models/pipeline_unbalanced_SVM.pkl'
+MODEL_PATH = 'app/pipeline_unbalanced_SVM.pkl'
 REDDIT_CLIENT_ID = 'oGWuKqgOA961MQ'
 REDDIT_CLIENT_SECRET = 'aUQGgqElMF0uUY4RkP64wvexyKY'
 REDDIT_USER_AGENT = 'cloudProject'
