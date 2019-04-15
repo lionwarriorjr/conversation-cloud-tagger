@@ -15,7 +15,7 @@ from pyspark.sql import SQLContext, SparkSession, Row
 from pyspark.sql.types import *
 import pyspark.sql.functions as F
 from pyod.models.loci import LOCI
-#import pyflux as pf
+import statsmodels.api as sm
 from google.cloud import bigquery
 from kafka import KafkaConsumer, SimpleProducer, KafkaClient
 import tweepy
@@ -76,29 +76,20 @@ def predict():
     return result
 
 def forecast(df):
-
-    #def runForecastModel(df):
-        #forecaster = ToxicityForecaster(df.prediction.values)
-        #return forecaster.forecast()
-
-    #_, forecasted = runForecastModel(df)
-    #start = [df.timestamp.iloc[-1]] * FORECAST_WINDOW
-    #forecastDF = pd.DataFrame({'timestamp': start})
-    #forecastDF['timestamp'] = pd.to_datetime(forecastDF.timestamp)
-    #offsets = [pd.DateOffset(hours=i) for i in range(1, FORECAST_WINDOW)]
-    #for i in range(len(offsets)):
-        #forecastDF.loc[i,'timestamp'] += offsets[i]
-    #forecastDF['prediction'] = forecasted
-    #return forecastDF
-
     forecast_window = int(df.shape[0] * FORECAST_WINDOW_PCT)
-    forecasted = pd.DataFrame(columns=['timestamp','prediction'])
+    forecasted = pd.DataFrame(columns=['timestamp', 'prediction'])
     model = None
-    #if forecast_window > 0:
-        #ts = df.set_index('timestamp')
-        #model = pf.GARCH(p=1, q=1, data=ts)
-        #model.fit('M-H', nsims=FORECAST_MCMC_SIMULATIONS)
-        #forecasted = model.predict(forecast_window).reset_index()
+    if forecast_window > 0:
+        history = df.prediction.values
+        ssm = sm.tsa.SARIMAX(history, order=(1,1,1), seasonal_order=(0,1,1,4))
+        model = ssm.fit()
+        predictions = model.forecast(forecast_window)
+        start = [df.timestamp.iloc[-1]] * forecast_window
+        forecasted = pd.DataFrame({'timestamp': start, 'prediction': predictions})
+        forecasted['timestamp'] = pd.to_datetime(forecasted.timestamp)
+        offsets = [pd.DateOffset(hours=i) for i in range(1, forecast_window)]
+        for i in range(len(offsets)):
+            forecasted.loc[i,'timestamp'] += offsets[i]
     return forecasted, model
 
 def run():
