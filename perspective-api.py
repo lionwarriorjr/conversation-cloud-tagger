@@ -40,6 +40,6 @@ for tweet in tweets:
 result = pd.DataFrame({'timestamp': times, 'text': tweets, 'toxicity': scores})
 result.timestamp = pd.to_datetime(result.timestamp)
 result.toxicity = pd.to_numeric(result.toxicity)
-result = result[result.score != -1]
+result = result[result.toxicity != -1]
 print(result.head())
 result.to_csv('tweets_' + topic + '.csv', index=False)
