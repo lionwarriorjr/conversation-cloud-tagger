@@ -16,8 +16,8 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 
 api = tweepy.API(auth)
-topic, limit = sys.argv[1], int(sys.argv[2])
-tweets = api.search(q=topic, lang="en", count=limit, tweet_mode="extended", since="2019-03-01", until="2019-04-18")
+topic = sys.argv[1]
+tweets = api.search(q=topic, lang="en", count=100, tweet_mode="extended", since="2019-03-01", until="2019-04-18")
 times = [tweet.created_at for tweet in tweets]
 tweets = [tweet.full_text for tweet in tweets]
 
@@ -27,19 +27,16 @@ service = discovery.build('commentanalyzer', 'v1alpha1', developerKey=API_KEY)
 scores = []
 for tweet in tweets:
   analyze_request = {
+    'languages': ["en"],
     'comment': { 'text': tweet },
     'requestedAttributes': {'TOXICITY': {}}
   }
   response = service.comments().analyze(body=analyze_request).execute()
-  if 'en' in response['languages']:
-    score = response['attributeScores']['TOXICITY']['summaryScore']['value']
-    scores.append(score)
-  else:
-    scores.append(-1)
+  score = response['attributeScores']['TOXICITY']['summaryScore']['value']
+  scores.append(score)
 
 result = pd.DataFrame({'timestamp': times, 'text': tweets, 'toxicity': scores})
 result.timestamp = pd.to_datetime(result.timestamp)
 result.toxicity = pd.to_numeric(result.toxicity)
-result = result[result.toxicity != -1]
 print(result.head())
 result.to_csv('tweets_' + topic + '.csv', index=False)
