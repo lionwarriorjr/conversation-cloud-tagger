@@ -41,9 +41,9 @@ Srihari: Implemented working/tested Spark pipeline from start to finish using ML
 
 Lalit: Worked on dockerization of Kafka datastream on minikube, to later push to Google Cloud.
 
-Ben:
+Ben: Moved our runtime environment from local machines to Google Cloud Platform to help scale and make collaboration easier. Filtered and connected the previously written Kafka code that uses tweepy to read in tweets about a certain topic (producer) and stream it to a spark dataframe (consumer) to the Spark-MLlib code (originally was writing to CSV but changed to Spark RDD for increased efficiency). Uses Direct Stream instead of Reciever (for Kafka-Spark connection) because more tolerant to failures (doesn't require Write Ahead Logs).
 
-Parth:
+Parth: Setup Google Cloud's Big Data Query instance on our GCP environment and connected it to output of Spark Mllib code so we can visualize the results (particularly time series analysis and anomaly detection).
 
 ### Remaining steps
 We need to integrate Kafka producer code as a separate service on Kubernetes. We will then transition our Kubernetes deployment from minikube to being deployed on GCP (should be trivial). We must also integrate the Kafka consumer code to pull tweets from the server and stream them into a Spark DataFrame for distributed processing via the pipeline. Lastly, we must setup BigQuery on GCP to which we can stream our generated toxicity time series data to. From BigQuery, we will then setup Google Data Studio to generate the appropriate visualizations via a Dashboard visible to the public. One important step is to refine our forecasting code, which we noticed can be somewhat inaccurate. These are the last steps to our implementation. What remains after is writing the paper. Another key step is to better set up a framework for comparing the utility of our implementation with existing solutions. This was one of the main comments that was mentioned generally across all projects. It is one we still need to refine and are setting aside time after wrapping our implementation to consider more carefully before writing the paper.
@@ -59,4 +59,5 @@ docker run --name <container-name> -it bash
 
 You can also run the code by setting up a Kubernetes context using minikube (install minikube first). Then cd into the kubernetes/ folder and run kubectl apply -f mltox.yaml. The ML prediction pipeline image will then be run on containers inside pods for this local deployment.
 
+The kafka code can be seen in the file "HowToRunOnGCP.txt" - however, it does require being added to our GCP as a collaborator (please let us know if you would like to be added and which email to add you with).
 ### Evaluation Plan
