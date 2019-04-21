@@ -39,7 +39,7 @@ def cleanText(column):
 # Spark Streaming component is the Kafka consumer
 # streams messages from Kafka into a spark dataframe or alternatively a .csv
 def consumeKafka():
-    retrun streamTweets()
+    return stireamTweets()
 
 def writeToBigQuery(df, dataset_id, table_id):
     client = bigquery.Client()
@@ -56,8 +56,8 @@ def tagAnomalies(df):
     df['isAnomaly'] = anomalyLabels
     return df
 
-def predict():
-    test = spark.read.csv(STREAMED_FILENAME, header=True, mode="DROPMALFORMED")
+def predict(test):
+    #test = spark.read.csv(STREAMED_FILENAME, header=True, mode="DROPMALFORMED")
     test = test.select(F.col("timestamp"), cleanText(F.col("text")))
     times = test.select("timestamp")
     test = test.drop("timestamp")
@@ -95,8 +95,8 @@ def forecast(df):
     return forecasted, model
 
 def run():
-    # consumeKafka()
-    history = predict()
+    spark_df=consumeKafka()
+    history = predict(spark_df)
     history = tagAnomalies(history)
     forecasted, model = forecast(history)
     print(history.head())

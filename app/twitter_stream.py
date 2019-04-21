@@ -24,7 +24,7 @@ class StdOutListener(StreamListener):
                     print (text)
                     return True
         '''
-        def on_status(self, status):
+        def on_status(self, status): # TODO: pass in timestamp
             producer.send_messages(keyword,status.text.encode('utf-8'))
             # Prints the text of the tweet
             print('Tweet text: ' + status.text)
@@ -60,5 +60,5 @@ def streamTweets():
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
     stream = Stream(auth, l)
-    stream.filter(track=keyword)
+    stream.filter(track=[keyword])#,languages=["en"])
     return kvs
