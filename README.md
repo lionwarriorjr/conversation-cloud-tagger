@@ -43,7 +43,7 @@ Parth:
 We need to integrate Kafka producer code as a separate service on Kubernetes. We will then transition our Kubernetes deployment from minikube to being deployed on GCP (should be trivial). We must also integrate the Kafka consumer code to pull tweets from the server and stream them into a Spark DataFrame for distributed processing via the pipeline. Lastly, we must setup BigQuery on GCP to which we can stream our generated toxicity time series data to. From BigQuery, we will then setup Google Data Studio to generate the appropriate visualizations via a Dashboard visible to the public. One important step is to refine our forecasting code, which we noticed can be somewhat inaccurate. These are the last steps to our implementation. What remains after is writing the paper. Another key step is to better set up a framework for comparing the utility of our implementation with existing solutions. This was one of the main comments that was mentioned generally across all projects. It is one we still need to refine and are setting aside time after wrapping our implementation to consider more carefully before writing the paper.
 
 ### Pointer to Code 
-The code for this checkpoint is in the same Git repo as in Checkpoint 1. The up-to-date Spark pipeline code is included on the spark-mllib branch. The code can be run by pulling this repo and building a Docker image from the provided Dockerfile using this command:
+The code for this checkpoint is in the same Git repo as in Checkpoint 1. The up-to-date Spark pipeline code is included on the **spark-mllib branch.** The code can be run by pulling this repo and building a Docker image from the provided Dockerfile using this command:
 
 docker build -t "cloud-ml-toxic-tagger" .
 
