@@ -3,90 +3,62 @@ from tweepy import OAuthHandler
 from tweepy import Stream
 from kafka import SimpleProducer, KafkaClient
 
-ACCESS_TOKEN = "3255311624-UAbx3pb96fumDxVmPw3DlaLFPPtbfn75IWBJd98"
-ACCESS_TOKEN_SECRET = "Q1260yMSSie8MeT1FdaJfs2iBHLsFPIvRRseRfEIorUOQ"
-CONSUMER_KEY = "mOOCVojaX0Tm0GIm7h4BY4Muk"
-CONSUMER_SECRET = "NrkXszzgcmI2M5O4F2J9JkJ8JlsfWKWw0T0AVjIYhd4LNBPo3F"
-KAFKA_TOPIC = "politics"
+from pyspark import SparkContext
+from pyspark.streaming import StreamingContext
+from pyspark.streaming.kafka import KafkaUtils
 
-kafka = KafkaClient("localhost:9092")
-producer = SimpleProducer(kafka)
+import json
 
+access_token = "771910501727100932-RsADid5iaB9kH8OpDjz0JLIV7hpE3HK"#"3255311624-UAbx3pb96fumDxVmPw3DlaLFPPtbfn75IWBJd98"
+access_token_secret =  "tpJxinCvIzgCpNu1hd0c900Ko6N0itJiAdU5w3cHRcIKQ"#"Q1260yMSSie8MeT1FdaJfs2iBHLsFPIvRRseRfEIorUOQ"
+consumer_key =  "KVNV68TEpLeZLqLDvm3RqBvw9"#"mOOCVojaX0Tm0GIm7h4BY4Muk"
+consumer_secret =  "6MTWXxKVSE5SqaD3MszzIce3MqTZEmHHvAgwtGRhSHYOwB4OFq"#"NrkXszzgcmI2M5O4F2J9JkJ8JlsfWKWw0T0AVjIYhd4LNBPo3F"
+
+keyword = "trump"
 class StdOutListener(StreamListener):
-    def on_data(self, data):
-        producer.send_messages("trump", data.encode('utf-8'))
-        print (data)
-        return True
-    def on_error(self, status):
-        print (status)
+        '''
+        def on_data(self, data):
+                    json_load = json.loads(data)
+                    text = json_load['text']
+                    producer.send_messages(keyword, text.encode('utf-8'))
+                    print (text)
+                    return True
+        '''
+        def on_status(self, status):
+            producer.send_messages(keyword,status.text.encode('utf-8'))
+            # Prints the text of the tweet
+            print('Tweet text: ' + status.text)
+                             
+            # There are many options in the status object,
+            # hashtags can be very easily accessed.
+            #            for hashtag in status.entries['hashtags']:
+            #    print(hashtag['text'])
+                                                                      
+            return True
+        def on_error(self, status):
+                    print (status)
+def streamTweets():
+    # create kafka producer
+    kafka = KafkaClient("localhost:9092")
+    producer = SimpleProducer(kafka)
+    # stream to spark
+    sc = SparkContext(appName="PythonStreamingDirectKafkaWordCount")
+    ssc = StreamingContext(sc, 2)
+    brokers = "localhost:9092"
+    kvs = KafkaUtils.createDirectStream(ssc, [keyword], {"metadata.broker.list": brokers})
+    #lines = kvs.map(lambda x: x[1])
+    #counts = lines.flatMap(lambda line: line.split(" ")) \
+            .map(lambda word: (word, 1)) \
+                .reduceByKey(lambda a, b: a+b)
 
-def run():
+
+    counts.pprint()
+    ssc.start()
+    ssc.awaitTermination()
+
     l = StdOutListener()
-    auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-    auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+    auth = OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_token, access_token_secret)
     stream = Stream(auth, l)
-    stream.filter(track=KAFKA_TOPIC)
-
-'''import json
-from kafka import SimpleProducer, KafkaClient
-import tweepy
-import configparser
-
-# Note: Some of the imports are external python libraries. They are installed on the current machine.
-# If you are running multinode cluster, you have to make sure that these libraries
-# and currect version of Python is installed on all the worker nodes.
-
-class TweeterStreamListener(tweepy.StreamListener):
-    """ A class to read the twiiter stream and push it to Kafka"""
-
-    def __init__(self, api):
-        self.api = api
-        super(tweepy.StreamListener, self).__init__()
-        client = KafkaClient("localhost:9092")
-        self.producer = SimpleProducer(client, async = True,
-                          batch_send_every_n = 1000,
-                          batch_send_every_t = 10)
-
-    def on_status(self, status):
-        """ This method is called whenever new data arrives from live stream.
-        We asynchronously push this data to kafka queue"""
-        msg =  status.text.encode('utf-8')
-        #print(msg)
-        try:
-            self.producer.send_messages(b'twitterstream', msg)
-        except Exception as e:
-            print(e)
-            return False
-        return True
-
-    def on_error(self, status_code):
-        print("Error received in kafka producer")
-        return True # Don't kill the stream
-
-    def on_timeout(self):
-        return True # Don't kill the stream
-
-if __name__ == '__main__':
-
-    # Read the credententials from 'twitter.txt' file
-    config = configparser.ConfigParser()
-    config.read('twitter.txt')
-    consumer_key = config['DEFAULT']['consumerKey']
-    consumer_secret = config['DEFAULT']['consumerSecret']
-    access_key = config['DEFAULT']['accessToken']
-    access_secret = config['DEFAULT']['accessTokenSecret']
-
-    # Create Auth object
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_key, access_secret)
-    api = tweepy.API(auth)
-
-    # Create stream and bind the listener to it
-    stream = tweepy.Stream(auth, listener = TweeterStreamListener(api))
-
-    #Custom Filter rules pull all traffic for those filters in real time.
-    #stream.filter(track = ['love', 'hate'], languages = ['en'])
-    stream.filter(locations=[-180,-90,180,90], languages = ['en'])
-
-
-'''
+    stream.filter(track=keyword)
+    return kvs

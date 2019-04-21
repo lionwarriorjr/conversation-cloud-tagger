@@ -13,12 +13,14 @@ from pyspark.ml.feature import *
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.sql import SQLContext, SparkSession, Row
 from pyspark.sql.types import *
+from pyspark.streaming.kafka import KafkaUtils
 import pyspark.sql.functions as F
 from pyod.models.loci import LOCI
 import statsmodels.api as sm
 from google.cloud import bigquery
 from kafka import KafkaConsumer, SimpleProducer, KafkaClient
 import tweepy
+from twitter_stream import streamTweets
 
 spark = SparkSession.builder.appName('mltox').getOrCreate()
 
@@ -37,7 +39,7 @@ def cleanText(column):
 # Spark Streaming component is the Kafka consumer
 # streams messages from Kafka into a spark dataframe or alternatively a .csv
 def consumeKafka():
-    pass
+    retrun streamTweets()
 
 def writeToBigQuery(df, dataset_id, table_id):
     client = bigquery.Client()
