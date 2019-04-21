@@ -4,7 +4,7 @@ Team Members: Srihari Mohan, Lalit Verada, Ben Pikus, Parth Singh
 
 This project exists as a cloud-based ML service that tags the extent to which conversation online is constructive vs. nonconstructive/aggressive/toxic. We leverage Machine Learning, Kubernetes, Spark, and Kafka as an exercise in building this system out from scratch in this novel and important area.
 
-Checkpoint 1:
+## Checkpoint 1:
 
 Our initial work can be split into four parts:
 Machine Learning Training/Deployment: Srihari worked on developing the machine learning pipeline for reading in text and classifying these examples in one of 3 categories, indicating the extent to which the example is toxic. Pipelines for text classification using Naive Bayes and SVMs are currently implemented. A pipeline for training/predicting with Recurrent Neural Networks (RNNs) is included but not yet tested. The test examples are trained with data from wikimedia comments that have been labeled by the wikimedia foundation as either non-toxic, aggressive, or toxic. The pipeline accommodates a grid search over the parameter space of the model's hyperparameters as well as running SMOTE (Synthetic Minority Oversampling) to accommodate for inbalanced class labels. The ML pipeline from start to finish is included in the notebook/cloud-conversation-tagger-unbalanced.ipynb. One needs to unzip the data to run it. Srihari also wrote the Kubernetes deployment, service, and Ingress configurations we will use to host our ML service on Kubernetes. The associated cluster is not yet set up, so it cannot yet be applied; however, it is templated and included for completeness. Srihari also wrote a python version of the notebook that reads in a pickled model and generates predictions, as well as a templated example that does the same but wraps the application for Flask. Lastly, Srihari containerized the project code to run in a Docker container by constructing a Docker image. This image will be hosted on Docker Hub and used by Kubernetes for our next checkpoint. This model is now trained and completely ready for deployment in our cloud setting. It is also setup to accept online training as described in our proposal (where the data is fetched from API queries).
@@ -19,3 +19,36 @@ As of now, each of these four parts are distinct and are mostly exploratory. The
 
 Generating Reproducible results:
 To run our notebook, you should be able to unzip the data in the toxic-data zip file and run the cloud-conversation-tagger-unbalanced notebook, up until the Deep Learning section (which is not yet tested). One can also run python app-toxic-tagger.py from within the app directory and pass a command line argument for the string of text to test (i.e python app-toxic-tagger.py "test example to tag"). You might need to specify python3 explicitly depending on which version of python is your default (i.e. python3 app-toxic-tagger.py "test example to tag"). Make sure to run the code in a virtual environment with Python 3.5.
+
+## Checkpoint 2:
+
+Our work on this project since the midterm presentation is substantial. At the midterm presentation, we had according to feedback, a somewhat vague representation of our overall architecture. The main feedback was that we should think more carefully about designing an architecture consistent with the needs of our application (and making sure that we were using the right technologies for the job). Our updated architecture is as follows: a .py file contains the code that fetches/streams tweets in real-time from Twitter using the tweepy library and pushes those tweets to a Kafka server run on GCP. The tweets pushed to the server will be constrained to a single topic (i.e. politics). The reason for this constraining is to better align our project with the cloud technologies we want to gain exposure to in this class. Namely, it makes sense to have a listener that repeatedly listens to new tweets on a topic and records them (i.e. pushes them to a server for processing). The data pushed can be fetched in real-time and used to update the analyses we run. This change is again more consistent with cloud technologies and an application that can always be up-and-running.
+
+To be concrete, our updated infrastructure is as follows: a listener (.py file) acts as the producer to Kafka. It repeatedly streams tweets on the "politics" topic and pushes them to the Kafka server. This producer logic is one microservice that is deployed on Kubernetes. A second service houses the ML pipeline in Spark. We use Spark MLLib to train a cross-validated gradient boosting tree algorithm to learn a score with respect to how toxic a text is perceived to be. The MLLib pipeline streams the data from Kafka into a Spark DataFrame, enabling fast, parallel, and distributed processing over a potentially very large number of new tweets. Although we likely will not be able to appreciate the advantages of this approach due to the fact that we are using Twitter's free trial API (and so are limited with respect to the amount of tweets we can pull/push at a given time), we choose this approach to make it easily extensible in the event that we do get access to an even larger amount of text data we could stream through our service in real-time. The Spark pipeline transforms the data and processes it through its use of RDDs before output a result dataframe consisting of the text, its timetamp, and learned toxicity score. The toxicity scores are rolled on an averaged-per-hour basis, permitting an anomaly detection algorithm to run over this time series (tagging anomolous spikes in toxicity). A time series forecasting algorithm (a variant of state space models) is then run over the time series to learn a forecasted time series of toxicity scores one week into the future. These two dataframes are appended into tables in BigQuery. Once in BigQuery, we use Google Data Studio to generate automated dashboards of the toxicity trends, anomaly detection, and forecasted anomalies for users to interact with (DNS provided, etc. as part of GCP). These two services, the distributed ML prediction pipeline using Spark/Kafka and the Kafka producer service, are deployed onto Kubernetes pods as services/deployments in a Kubernetes cluster hosted on GKE (Google Kubernetes Engine). Kubernetes provides scalability and availability for our application. We are still in the process of finding the best way to benchmark our application against existing approaches.
+
+### Who has done what
+Described above is the MLTOX architecture. We got far in our implementation of it since the midterm presentation and describe our progress per team member next:
+
+Srihari: Implemented working/tested Spark pipeline from start to finish using MLLib. Trained the MLLib gradient boosting tree algorithm and cross-validated the model. Containerized prediction pipeline in Docker and pushed final prediction pipeline image to Docker Hub. Deployed services on Kubernetes and tested deployments for prediction pipeline to ensure they work. Kubernetes deployments currently run on local via Minikube but will be transitioned to GCP for the final checkpoint. At this point, the Spark pipeline and Kubernetes deployment work are effectively completed for the project. Scraped training data from Twitter and helped integrate Perspective API to learn toxicity scores for the model.
+
+Lalit:
+
+Ben:
+
+Parth:
+
+### Remaining steps
+We need to integrate Kafka producer code as a separate service on Kubernetes. We will then transition our Kubernetes deployment from minikube to being deployed on GCP (should be trivial). We must also integrate the Kafka consumer code to pull tweets from the server and stream them into a Spark DataFrame for distributed processing via the pipeline. Lastly, we must setup BigQuery on GCP to which we can stream our generated toxicity time series data to. From BigQuery, we will then setup Google Data Studio to generate the appropriate visualizations via a Dashboard visible to the public. One important step is to refine our forecasting code, which we noticed can be somewhat inaccurate. These are the last steps to our implementation. What remains after is writing the paper.
+
+### Pointer to Code 
+The code for this checkpoint is in the same Git repo as in Checkpoint 1. The up-to-date Spark pipeline code is included on the spark-mllib branch. The code can be run by pulling this repo and building a Docker image from the provided Dockerfile using this command:
+
+docker build -t "cloud-ml-toxic-tagger" .
+
+Running the above should create a running container that can be viewed using docker ps -a. Grab the container just created and run:
+
+docker run --name <container-name> -it bash
+
+You can also run the code by setting up a Kubernetes context using minikube (install minikube first). Then cd into the kubernetes/ folder and run kubectl apply -f mltox.yaml. The ML prediction pipeline image will then be run on containers inside pods for this local deployment.
+
+### Evaluation Plan
