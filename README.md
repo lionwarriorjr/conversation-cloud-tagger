@@ -1,4 +1,4 @@
-# conversation-cloud-tagger
+# MLTOX: Cloud-based ML Toxicity Detector
 
 Team Members: Srihari Mohan, Lalit Verada, Ben Pikus, Parth Singh
 
