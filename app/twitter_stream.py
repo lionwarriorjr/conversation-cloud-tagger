@@ -39,7 +39,7 @@ class StdOutListener(StreamListener):
                     print (status)
 def streamTweets():
     # create kafka producer
-    kafka = KafkaClient("localhost:9092")
+    kafka = KafkaClient("localhost:9092") # TODO: CHANGE THIS TO BE NOT LOCAL
     producer = SimpleProducer(kafka)
     # stream to spark
     sc = SparkContext(appName="PythonStreamingDirectKafkaWordCount")
@@ -48,8 +48,8 @@ def streamTweets():
     kvs = KafkaUtils.createDirectStream(ssc, [keyword], {"metadata.broker.list": brokers})
     #lines = kvs.map(lambda x: x[1])
     #counts = lines.flatMap(lambda line: line.split(" ")) \
-            .map(lambda word: (word, 1)) \
-                .reduceByKey(lambda a, b: a+b)
+    #        .map(lambda word: (word, 1)) \
+    #            .reduceByKey(lambda a, b: a+b)
 
 
     counts.pprint()
