@@ -39,7 +39,7 @@ def cleanText(column):
 # Spark Streaming component is the Kafka consumer
 # streams messages from Kafka into a spark dataframe or alternatively a .csv
 def consumeKafka():
-    return stireamTweets()
+    return streamTweets()
 
 def writeToBigQuery(df, dataset_id, table_id):
     client = bigquery.Client()
