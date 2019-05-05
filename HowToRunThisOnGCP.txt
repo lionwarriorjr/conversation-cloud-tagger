@@ -1,3 +1,0 @@
-1. Open the Cloud-computing project in GCP (id = cloud-computing-237814 )
-2. Go to the Kafka vm (https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-f/instances/kafka-1-vm?q=search&project=cloud-computing-237814&cloudshell=true&folder&organizationId)
-3. Click SSH --> open in browser window

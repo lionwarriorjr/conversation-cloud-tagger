@@ -1,11 +1,19 @@
-FROM python:3.5-alpine
+# FROM vaeum/ubuntu-python3-pip3
+# MAINTAINER Srihari Mohan (smohan12@jhu.edu)
+# ADD . /app
+# WORKDIR /app
+# EXPOSE 80
+# RUN pip install --upgrade pip
+# RUN pip install -r requirements.txt
+# ENTRYPOINT ["python", "app/spark-toxic-tagger.py"]
+# #ENTRYPOINT ["python", "app/app-toxic-tagger.py"]
+# #CMD ["please provide text sample"]
+
+FROM jupyter/pyspark-notebook
 MAINTAINER Srihari Mohan (smohan12@jhu.edu)
 ADD . /app
 WORKDIR /app
-RUN apk add --update alpine-sdk
-RUN pip install -U pip
-RUN python -m pip install --upgrade https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-1.12.0-cp35-cp35m-linux_x86_64.whl
+EXPOSE 80
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
-ENV MODEL svm
-ENTRYPOINT ["python", "app-toxic-tagger.py"]
-CMD ["test example to tag toxic text"]
+ENTRYPOINT ["python", "app/spark-toxic-tagger.py"]
