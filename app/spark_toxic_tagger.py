@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import numpy as np
 import pandas as pd
@@ -19,7 +19,6 @@ import pyspark.sql.functions as F
 from pyod.models.loci import LOCI
 import statsmodels.api as sm
 from google.cloud import bigquery
-#from google.oauth2 import service_account
 import tweepy
 import csv
 import time

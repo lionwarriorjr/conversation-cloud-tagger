@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mltox-producer-deployment
+spec:
+  selector:
+    matchLabels:
+      app: mltox-producer
+  replicas: 1 # tells deployment to run n_replicas pods matching the template
+  template:
+    metadata:
+      labels:
+        app: mltox-producer
+    spec:
+      containers:
+      - name: mltox-producer
+        image: smohan12/mltox-producer:0.0.1
+        ports:
+        - containerPort: 80

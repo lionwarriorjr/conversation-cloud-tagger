@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mltox-consumer-deployment
+spec:
+  selector:
+    matchLabels:
+      app: mltox-consumer
+  replicas: 1 # tells deployment to run n_replicas pods matching the template
+  template:
+    metadata:
+      labels:
+        app: mltox-consumer
+    spec:
+      containers:
+      - name: mltox-consumer
+        image: smohan12/mltox-consumer:0.0.1
+        ports:
+        - containerPort: 80
