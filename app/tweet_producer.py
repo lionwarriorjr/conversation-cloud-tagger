@@ -46,7 +46,6 @@ def get_twitter_data():
         text = ' '.join(text.split())
         created_at = tweet.created_at
         message = {"timestamp": str(created_at), "text": text}
-        print(message)
         producer.send(topic_name, message)
 
     producer.flush()
