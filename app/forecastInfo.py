@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+from pandas import concat
 #import nltk
 import string
 import itertools
@@ -48,11 +49,12 @@ def runOnActualData(filename):
     timestamp= np.arange(data.shape[0])
     nums = data['prediction'].values
     doForecasting(nums,timestamp)
+    
+    getAutoCorrelationScore(nums,timestamp)
 
 
 def doForecasting(nums,timestamp):
     forecast_window = int(len(nums) * FORECAST_WINDOW_PCT)
-    forecasted = pd.DataFrame(columns=['timestamp', 'prediction'])
     model = None
     if forecast_window > 0:
         history = nums#nums[0:int(len(nums) * (1-FORECAST_WINDOW_PCT))]#data.prediction.values 
@@ -69,11 +71,13 @@ def runOnLinearData(n):
     nums = np.arange(n)# # linear
     timestamp= np.arange(n)
     doForecasting(nums,timestamp)
+    getAutoCorrelationScore(nums,timestamp)
     
 def runOnRandomData(n):
     nums = np.random.rand(n)*100 # random
     timestamp= np.arange(n)
     doForecasting(nums,timestamp)
+    getAutoCorrelationScore(nums,timestamp)
 
 def runOnSinusoidalData(n):
     Fs = n
@@ -82,6 +86,7 @@ def runOnSinusoidalData(n):
     timestamp= np.arange(n)
     nums = np.sin(2 * np.pi * f * timestamp / Fs)
     doForecasting(nums,timestamp)
+    getAutoCorrelationScore(nums,timestamp)
     
 def doGridSearch(filename):
     data = pd.read_csv(filename)
@@ -114,12 +119,51 @@ def doGridSearch(filename):
                     continue
     
         print(best_param + "   " + str(min_aic))
+     
+def getAutoCorrelationScore(nums, timestamp):
+    '''from pandas.plotting import lag_plot
+    from pandas import Series
+    from pandas import DataFrame
+    
+    series = Series.from_csv(filename, header=0)
+    
+    lag_plot(series)
+    plt.show()
+    values = DataFrame(series.values)
+    dataframe = concat([values.shift(1), values], axis=1)
+    dataframe.columns = ['t-1', 't+1']
+    result = dataframe.corr()
+    print(result)
+    from pandas.plotting import autocorrelation_plot
+    f= plt.figure()
+    autocorrelation_plot(series)
+    f.show()
+    
+    data = pd.read_csv(filename)
+    timestamp= np.arange(data.shape[0])
+    nums = data['prediction'].values'''
+    forecast_window = int(len(nums) * FORECAST_WINDOW_PCT)
+    model = None
+    if forecast_window > 0:
+        history = nums[0:int(len(nums) * (1-FORECAST_WINDOW_PCT))]#data.prediction.values 
+        actual = nums[-int(len(nums) * (FORECAST_WINDOW_PCT)):]
+        #print(len(actual))
+        #print(len(history))
+        ssm = sm.tsa.SARIMAX(history,order=(1,0,0), seasonal_order=(1,1,0,12), enforce_stationarity=False)
+        model = ssm.fit()
+        predictions = model.forecast(forecast_window) 
+        dataframe = concat([pd.DataFrame(actual),pd.DataFrame(predictions)], axis=1)
+        #print(dataframe)
+        result = dataframe.corr().values
+        print("AutoCorrelation Score: " + str(abs(result[0][1])))
         
+        print("Mean Absolute Percentage Error: " + 
+              str( np.round(np.mean(np.abs((actual - predictions) / actual)) * 100,2)) + "%")#str(np.average((actual-predictions)**2)))
 #doGridSearch("../sampledata.csv")
-runOnActualData("../sampledata2.csv")
-#runOnActualData("../sampledata.csv")
+#runOnActualData("../sampledata2.csv")
+runOnActualData("../sampledata.csv")
 #runOnLinearData(200)
-#runOnSinusoidalData(55)
+#runOnSinusoidalData(120)
 #runOnRandomData(132)
 
 
