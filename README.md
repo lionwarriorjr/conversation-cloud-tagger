@@ -60,4 +60,11 @@ docker run --name <container-name> -it bash
 You can also run the code by setting up a Kubernetes context using minikube (install minikube first). Then cd into the kubernetes/ folder and run kubectl apply -f mltox.yaml. The ML prediction pipeline image will then be run on containers inside pods for this local deployment.
 
 The kafka code can be seen in the file "HowToRunOnGCP.txt" - however, it does require being added to our GCP as a collaborator (please let us know if you would like to be added and which email to add you with).
-### Evaluation Plan
+
+### Final Submission
+Our real-time MLTox toxicity visualization dashboard is here!
+https://datastudio.google.com/u/0/reporting/19e6NORcUonzqnsiaQ7VTVPFzWML9eW_3/page/VgD
+
+The code in master is streamlined to make it as easy as possible to reproduce MLTox. Assuming python --version returns Python 3.5, simply running python app/tweet_producer.py should start up a connection with the Kafka server, repeatedly fetch tweets using the tweepy API, and publish these messages serialized to the server. Running python app/tweet_consumer.py starts up a connection with the server, pulls new tweets associated with the tagged group id, before running the ML predictor and writing output to BigQuery. 
+
+However, the application as its currently set up constructs Docker container images to be spun up as containers on pods in Kubernetes. WLOG, we included the Dockerfile for the Kafka consumer/ML predictor service. Our container images are already pushed to Docker Hub (https://hub.docker.com/search?q=mltox&type=image). The mltox-consumer and mltox-producer images are being run, in addition to the mltox-consumer-forecaster in GKE. You could simply take the deployment mltox-producer.yaml for instance and run kubectl apply -f mltox-producer.yaml in a Kubernetes cluster). The producer would then be spun up and running on the cluster. If you want to do it by hand, simply run docker build -t mltox-tester . to build the container image (we recognize these images are very large now since they still include the model files directly rather than storing them in Google Storage/AWS S3). We would shrink these images but for time and focusing more on the paper, we decided not to. Once the image is built, you could run docker tag <img_tag> docker_username/image_name. Then docker push docker_username/image_name. This image would be on Docker Hub now and you could deploy that as well to verify.
