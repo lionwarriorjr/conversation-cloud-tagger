@@ -16,8 +16,8 @@ access_token_secret = 'qkoveocNv5fg4Qe7BHz3pTaTgWjvEMShjtKlsqm7Gls1t'
 ###  KAFKA parameters
 SERVER_URL = "kafka-29b24362-svindiana-22b8.aivencloud.com:29413"
 TOPIC_NAME = "tweets"
-CLIENT_ID = "mltox-predictor-client"
-GROUP_ID = "mltox-predictor-group"
+CLIENT_ID = "mltox-predictor-client-forecaster"
+GROUP_ID = "mltox-predictor-group-forecaster"
 CA_FILENAME = "credentials/ca.pem"
 CERT_FILENAME = "credentials/service.cert"
 SSL_FILENAME = "credentials/service.key"

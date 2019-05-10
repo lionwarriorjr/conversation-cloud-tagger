@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import numpy as np
 import pandas as pd
@@ -29,13 +29,14 @@ spark = SparkSession.builder.appName('mltox').getOrCreate()
 MODEL_PATH = "models/spark-gradientboosting-toxic-tagger-cv"
 FORECAST_WINDOW_PCT = 0.25
 FORECAST_MCMC_SIMULATIONS = 10000 # tunable
+SSM_LAG = 1
 STREAMED_FILENAME = "app/toxic-data/tweets-timestamped.csv"
 
 ### BigQuery Parameters
 GCP_PROJECT_ID = "cloud-computing-237814"
-BQ_TIME_SERIES_TABLE = "MLTOX.TIME_SERIES"
-BQ_FORECAST_TABLE = "MLTOX.FORECAST"
-BQ_MESSAGES_TABLE = "MLTOX.MESSAGES"
+BQ_TIME_SERIES_TABLE = "MLTOX.TIME_SERIES_V2"
+BQ_FORECAST_TABLE = "MLTOX.FORECAST_V2"
+BQ_MESSAGES_TABLE = "MLTOX.MESSAGES_V2"
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "credentials/gcp-key.json"
 
@@ -66,23 +67,29 @@ def predict():
     tagged = timesIndex.join(testIndex, "id", "inner").drop("id")
     tagged = tagged.withColumn("datetime", F.from_unixtime(F.unix_timestamp("timestamp", "yyyy-MM-dd HH:mm:ss")))
     tagged = tagged.select(F.col("datetime"), F.col("prediction"))
-    tagged = tagged.withColumn("timestamp", F.date_trunc("minute", F.col("datetime").cast("timestamp")))
-    tagged = tagged.select(F.col("timestamp"), F.col("prediction"))
-    result = tagged.groupBy("timestamp").mean("prediction").sort(F.col("timestamp").asc())
-    result = result.na.drop(subset=["timestamp", "avg(prediction)"])
-    result = result.toPandas()
-    result['timestamp'] = pd.to_datetime(result.timestamp)
-    result.columns = ['timestamp', 'prediction']
+    minutes = tagged.withColumn("timestamp", F.date_trunc("minute", F.col("datetime").cast("timestamp")))
+    hours = tagged.withColumn("timestamp", F.date_trunc("hour", F.col("datetime").cast("timestamp")))
+    minutes = minutes.select(F.col("timestamp"), F.col("prediction"))
+    hours = hours.select(F.col("timestamp"), F.col("prediction"))
+    resultMinutes = minutes.groupBy("timestamp").mean("prediction").sort(F.col("timestamp").asc())
+    resultHours = hours.groupBy("timestamp").mean("prediction").sort(F.col("timestamp").asc())
+    resultMinutes = resultMinutes.na.drop(subset=["timestamp", "avg(prediction)"])
+    resultHours = resultHours.na.drop(subset=["timestamp", "avg(prediction)"])
+    resultMinutes, resultHours = resultMinutes.toPandas(), resultHours.toPandas()
+    resultMinutes['timestamp'] = pd.to_datetime(resultMinutes.timestamp)
+    resultHours['timestamp'] = pd.to_datetime(resultHours.timestamp)
+    resultMinutes.columns = ['timestamp', 'prediction']
+    resultHours.columns = ['timestamp', 'prediction']
     messages['timestamp'] = pd.to_datetime(messages.timestamp)
-    return result, messages
+    return resultMinutes, resultHours, messages
 
 def forecast(df):
     forecast_window = int(df.shape[0] * FORECAST_WINDOW_PCT)
     forecasted = pd.DataFrame(columns=['timestamp', 'prediction'])
     model = None
-    if forecast_window > 0:
+    if forecast_window > SSM_LAG:
         history = df.prediction.values
-        ssm = sm.tsa.SARIMAX(history, order=(1,1,1), seasonal_order=(0,1,1,4))
+        ssm = sm.tsa.SARIMAX(history, order=(1,0,0), seasonal_order=(1,1,0,12))
         model = ssm.fit()
         predictions = model.forecast(forecast_window)
         start = [df.timestamp.iloc[-1]] * forecast_window
@@ -94,14 +101,16 @@ def forecast(df):
     return forecasted, model
 
 def run():
-    history, messages = predict()
+    history, forecasted, messages = predict()
     history = tagAnomalies(history)
-    #forecasted, model = forecast(history)
-    print(history.head())
-    print(messages.head())
-    #print(forecasted.head())
+    forecasted, model = forecast(forecasted)
     history.columns = ['times','prediction','isAnomaly']
     messages.columns = ['times', 'message']
+    forecasted.columns = ['times','prediction']
+    print(history.head())
+    print(messages.head())
+    print(forecasted.head())
     writeToBigQuery(history, BQ_TIME_SERIES_TABLE)
     writeToBigQuery(messages, BQ_MESSAGES_TABLE)
-    #writeToBigQuery(forecast, BQ_FORECAST_TABLE)
+    if forecasted.shape[0] > 0:
+        writeToBigQuery(forecasted, BQ_FORECAST_TABLE)
