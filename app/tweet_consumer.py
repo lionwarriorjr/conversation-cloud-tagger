@@ -10,8 +10,8 @@ STREAMED_FILENAME = "app/toxic-data/tweets-timestamped.csv"
 consumer = KafkaConsumer(
     "politics",
     bootstrap_servers="kafka-29b24362-svindiana-22b8.aivencloud.com:29413",
-    client_id="mltox-predictor-client-forecaster",
-    group_id="mltox-predictor-group-forecaster",
+    client_id="mltox-predictor-client-forecaster-2",
+    group_id="mltox-predictor-group-forecaster-2",
     security_protocol="SSL",
     ssl_cafile="credentials/ca.pem",
     ssl_certfile="credentials/service.cert",
