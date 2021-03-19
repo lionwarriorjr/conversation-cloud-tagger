@@ -23,7 +23,7 @@ packaging==19.0
 pandas==0.24.2
 pandas-gbq==0.10.0
 patsy==0.5.1
-Pillow==6.0.0
+Pillow==8.1.1
 protobuf==3.7.1
 py4j==0.10.7
 pyasn1==0.4.5
