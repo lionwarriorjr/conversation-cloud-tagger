@@ -11,7 +11,7 @@ google-cloud-core==0.29.1
 google-resumable-media==0.3.2
 googleapis-common-protos==1.5.9
 idna==2.8
-Jinja2==2.10.1
+Jinja2==2.11.3
 kafka-python==1.4.6
 kiwisolver==1.0.1
 MarkupSafe==1.1.1
