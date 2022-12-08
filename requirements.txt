@@ -1,7 +1,7 @@
 algopy==0.5.7
 bokeh==1.1.0
 cachetools==3.1.0
-certifi==2019.3.9
+certifi==2022.12.7
 chardet==3.0.4
 cycler==0.10.0
 google-api-core==1.9.0
